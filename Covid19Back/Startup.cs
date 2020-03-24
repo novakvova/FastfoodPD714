@@ -68,6 +68,7 @@ namespace Covid19Back
             {
                 endpoints.MapControllers();
             });
+            //SeederDatabase.SeedData(app.ApplicationServices, env, Configuration);
         }
     }
 }

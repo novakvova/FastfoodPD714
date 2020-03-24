@@ -18,7 +18,7 @@ namespace Covid19Back.Entities
 
         }
         //public DbSet<Consumer> Consumers { get; set; }
-        // public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
+         public DbSet<Product> Products { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
