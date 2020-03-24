@@ -15,16 +15,19 @@ namespace Covid19Back.Controllers
         public IActionResult GetAll()
         {
             List<ProductDTO> model = new List<ProductDTO>() {
-            new ProductDTO{
-                title = "Salo",
-                price = "99999",
-                url = "/android/salo1.jfif"
-
-
-            }
+                new ProductDTO{
+                    title = "Salo",
+                    price = "99999",
+                    url = "http://10.0.2.2/android/salo1.jfif"
+                },
+                new ProductDTO{
+                    title = "Чебуреки",
+                    price = "15грн.",
+                    url = "http://10.0.2.2/android/2.jpg"
+                }
             };
             return Ok(model);
         }
-        
+
     }
 }
