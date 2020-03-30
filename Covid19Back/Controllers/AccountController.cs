@@ -61,7 +61,6 @@ namespace Covid19Back.Controllers
             {
                 return BadRequest(new
                 {
-                    token = "",
                     invalid = "Не валідна модель"
                 });
             }
@@ -73,7 +72,6 @@ namespace Covid19Back.Controllers
             {
                 return BadRequest(new
                 {
-                    token = "",
                     invalid = "Не правильно введені дані!"
                 });
             }
