@@ -87,6 +87,7 @@ namespace Covid19Back
             }
 
             app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             string serverPath = env.ContentRootPath;
