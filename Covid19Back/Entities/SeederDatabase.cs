@@ -12,8 +12,6 @@ namespace Covid19Back.Entities
 {
     public static class SeederDatabase
     {
-
-
         public static void SeedData(IServiceProvider services,
            IWebHostEnvironment env,
            IConfiguration config)
@@ -73,7 +71,10 @@ namespace Covid19Back.Entities
 
             for (int i = 0; i < 30; i++)
             {
-                products.Add(new Product { Name = faker.Commerce.ProductName(), Price = faker.Random.Double(1,1000), Description = faker.Commerce.Product(), Image = faker.Image.PicsumUrl(400,400,false,false,null)});
+                products.Add(new Product { Name = faker.Commerce.ProductName(), 
+                    Price = faker.Random.Double(1,1000), 
+                    Description = faker.Commerce.Product(), 
+                    Image = faker.Image.PicsumUrl(400,400,false,false,null)});
             }
 
 
