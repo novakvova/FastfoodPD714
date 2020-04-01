@@ -14,7 +14,7 @@ namespace Covid19Back.Controllers
 {
     [Route("api/[controller]")]
     [Produces("application/json")]
-    //[Authorize]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -47,7 +47,7 @@ namespace Covid19Back.Controllers
             return Ok(model);
         }
         [HttpGet("edit/{id}")]
-        //[Authorize(Roles ="Admin")]
+        [Authorize(Roles ="Admin")]
         public IActionResult GetByIdProductForEdit([FromRoute] int id)
         {
             var item = _context.Products.SingleOrDefault(x => x.Id == id);
@@ -68,7 +68,7 @@ namespace Covid19Back.Controllers
             }
         }
         [HttpPost("edit")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult UpdateByIdProductForEdit([FromBody]ProductEditDTO model)
         {
             var item = _context.Products.SingleOrDefault(x => x.Id == model.Id);
