@@ -8,12 +8,13 @@ using Covid19Back.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Covid19Back.Controllers
 {
     [Route("api/[controller]")]
     [Produces("application/json")]
-    [Authorize]
+    //[Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -45,12 +46,64 @@ namespace Covid19Back.Controllers
             //};
             return Ok(model);
         }
-
+        [HttpGet("edit/{id}")]
+        //[Authorize(Roles ="Admin")]
+        public IActionResult GetByIdProductForEdit([FromRoute] int id)
+        {
+            var item = _context.Products.SingleOrDefault(x => x.Id == id);
+            if(item!=null)
+            {
+                ProductEditDTO product = new ProductEditDTO()
+                {
+                    Id = item.Id, price = item.Price.ToString(), title = item.Name
+                };
+                return Ok(product);
+            }
+            else
+            {
+                return BadRequest(new
+                {
+                    invalid = "Не знайдено по даному id"
+                });
+            }
+        }
+        [HttpPost("edit")]
+        //[Authorize(Roles = "Admin")]
+        public IActionResult UpdateByIdProductForEdit([FromBody]ProductEditDTO model)
+        {
+            var item = _context.Products.SingleOrDefault(x => x.Id == model.Id);
+            if (item != null)
+            {
+                item.Name = model.title;
+                double price = 0;
+                bool successfullyParsed = double.TryParse(model.price, out price);
+                if (successfullyParsed)
+                {
+                    item.Price = price;
+                    _context.Entry(item).State = EntityState.Modified;
+                    _context.SaveChanges();
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        invalid = "Не вірний тип данних"
+                    });
+                }
+            }
+            else
+            {
+                return BadRequest(new
+                {
+                    invalid = "Не знайдено по даному id"
+                });
+            }
+        }
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
         public IActionResult Create([FromBody]ProductCreateDTO model)
         {
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(new
