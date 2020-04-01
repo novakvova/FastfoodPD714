@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bogus;
 using Covid19Back.DTO;
 using Covid19Back.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -45,5 +46,33 @@ namespace Covid19Back.Controllers
             return Ok(model);
         }
 
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult Create([FromBody]ProductCreateDTO model)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    invalid = "Не валідна модель"
+                });
+            }
+            var faker = new Faker();
+            Product product = new Product
+            {
+                Name = model.title,
+                Image = faker.Image.PicsumUrl(400, 400, false, false, null),
+                Price = Double.Parse(model.price),
+                Description = "Капець"
+            };
+            _context.Products.Add(product);
+            _context.SaveChanges();
+            return Ok(
+            new
+            {
+                id = product.Id
+            });
+        }
     }
 }
