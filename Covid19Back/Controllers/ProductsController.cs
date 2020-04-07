@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Covid19Back.Controllers
 {
@@ -23,20 +24,24 @@ namespace Covid19Back.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _configuration;
 
         public ProductsController(ApplicationDbContext context,
+            IConfiguration configuration,
             IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
+            _configuration = configuration;
         }
         public IActionResult GetAll()
         {
+            string domain = (string)_configuration.GetValue<string>("BackendDomain");
             var model = _context.Products.Select(p => new ProductDTO
             {
                 title = p.Name,
                 price = p.Price.ToString(),
-                url = p.Image
+                url = $"{domain}android/{p.Image}"
             }).ToList();
 
 
@@ -55,15 +60,17 @@ namespace Covid19Back.Controllers
             return Ok(model);
         }
         [HttpGet("edit/{id}")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public IActionResult GetByIdProductForEdit([FromRoute] int id)
         {
             var item = _context.Products.SingleOrDefault(x => x.Id == id);
-            if(item!=null)
+            if (item != null)
             {
                 ProductEditDTO product = new ProductEditDTO()
                 {
-                    Id = item.Id, price = item.Price.ToString(), title = item.Name
+                    Id = item.Id,
+                    price = item.Price.ToString(),
+                    title = item.Name
                 };
                 return Ok(product);
             }
@@ -123,38 +130,31 @@ namespace Covid19Back.Controllers
             bool successfullyParsed = double.TryParse(model.price, out price);
             if (successfullyParsed)
             {
-                var image = model.imageBase64.FromBase64StringToImage();
-                if (image != null)
+                var imageName = Path.GetRandomFileName() + ".jpg";
+                string savePath = _env.ContentRootPath;
+                string folderImage = "images";
+                savePath = Path.Combine(savePath, folderImage);
+                savePath = Path.Combine(savePath, imageName);
+                using (FileStream fs = new FileStream(savePath, FileMode.Create))
                 {
-                    var imageName = Path.GetRandomFileName() + ".jpg";
-                    string savePath = _env.ContentRootPath;
-                    string folderImage = "images";
-                    savePath = Path.Combine(savePath, folderImage);
-                    savePath = Path.Combine(savePath, imageName);
-                    image.Save(savePath, ImageFormat.Jpeg);
-                    var faker = new Faker();
-                    Product product = new Product
-                    {
-                        Name = model.title,
-                        Image = imageName,
-                        Price = Double.Parse(model.price),
-                        Description = "Капець"
-                    };
-                    _context.Products.Add(product);
-                    _context.SaveChanges();
-                    return Ok(
-                    new
-                    {
-                        id = product.Id
-                    });
+                    byte[] byteBuffer = Convert.FromBase64String(model.imageBase64);
+                    fs.Write(byteBuffer);
                 }
-                else
+                var faker = new Faker();
+                Product product = new Product
                 {
-                    return BadRequest(new
-                    {
-                        invalid = "Помилка обробки фото"
-                    });
-                }
+                    Name = model.title,
+                    Image = imageName,
+                    Price = Double.Parse(model.price),
+                    Description = "Капець"
+                };
+                _context.Products.Add(product);
+                _context.SaveChanges();
+                return Ok(
+                new
+                {
+                    id = product.Id
+                });
             }
             else
             {
@@ -163,7 +163,7 @@ namespace Covid19Back.Controllers
                     invalid = "Не вірний тип данних"
                 });
             }
-   
+
         }
     }
 }
