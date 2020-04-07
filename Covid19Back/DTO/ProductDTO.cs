@@ -18,6 +18,8 @@ namespace Covid19Back.DTO
         public string title { get; set; }
         [Required]
         public string price { get; set; }
+        [Required]
+        public string imageBase64 { get; set; }
     }
     public class ProductEditDTO
     {

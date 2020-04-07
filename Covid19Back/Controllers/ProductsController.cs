@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using Covid19Back.DTO;
 using Covid19Back.Entities;
+using Covid19Back.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +22,13 @@ namespace Covid19Back.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public ProductsController(ApplicationDbContext context)
+        private readonly IWebHostEnvironment _env;
+
+        public ProductsController(ApplicationDbContext context,
+            IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
         public IActionResult GetAll()
         {
@@ -111,21 +119,51 @@ namespace Covid19Back.Controllers
                     invalid = "Не валідна модель"
                 });
             }
-            var faker = new Faker();
-            Product product = new Product
+            double price = 0;
+            bool successfullyParsed = double.TryParse(model.price, out price);
+            if (successfullyParsed)
             {
-                Name = model.title,
-                Image = faker.Image.PicsumUrl(400, 400, false, false, null),
-                Price = Double.Parse(model.price),
-                Description = "Капець"
-            };
-            _context.Products.Add(product);
-            _context.SaveChanges();
-            return Ok(
-            new
+                var image = model.imageBase64.FromBase64StringToImage();
+                if (image != null)
+                {
+                    var imageName = Path.GetRandomFileName() + ".jpg";
+                    string savePath = _env.ContentRootPath;
+                    string folderImage = "images";
+                    savePath = Path.Combine(savePath, folderImage);
+                    savePath = Path.Combine(savePath, imageName);
+                    image.Save(savePath, ImageFormat.Jpeg);
+                    var faker = new Faker();
+                    Product product = new Product
+                    {
+                        Name = model.title,
+                        Image = imageName,
+                        Price = Double.Parse(model.price),
+                        Description = "Капець"
+                    };
+                    _context.Products.Add(product);
+                    _context.SaveChanges();
+                    return Ok(
+                    new
+                    {
+                        id = product.Id
+                    });
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        invalid = "Помилка обробки фото"
+                    });
+                }
+            }
+            else
             {
-                id = product.Id
-            });
+                return BadRequest(new
+                {
+                    invalid = "Не вірний тип данних"
+                });
+            }
+   
         }
     }
 }
