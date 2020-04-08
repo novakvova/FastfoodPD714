@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bogus;
 using Covid19Back.DTO;
@@ -117,6 +121,7 @@ namespace Covid19Back.Controllers
         }
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
+        [RequestSizeLimit(100 * 1024 * 1024)]     // set the maximum file size limit to 100 MB
         public IActionResult Create([FromBody]ProductCreateDTO model)
         {
             if (!ModelState.IsValid)
@@ -135,10 +140,33 @@ namespace Covid19Back.Controllers
                 string folderImage = "images";
                 savePath = Path.Combine(savePath, folderImage);
                 savePath = Path.Combine(savePath, imageName);
-                using (FileStream fs = new FileStream(savePath, FileMode.Create))
+                //using (FileStream fs = new FileStream(savePath, FileMode.Create))
+                //{
+                //    byte[] byteBuffer = Convert.FromBase64String(model.imageBase64);
+                //    fs.Write(byteBuffer);
+                //}
+
+                try
                 {
                     byte[] byteBuffer = Convert.FromBase64String(model.imageBase64);
-                    fs.Write(byteBuffer);
+                    using (MemoryStream memoryStream = new MemoryStream(byteBuffer))
+                    {
+                        memoryStream.Position = 0;
+                        using (Image imgReturn = Image.FromStream(memoryStream))
+                        {
+                            memoryStream.Close();
+                            byteBuffer = null;
+                            var bmp = new Bitmap(imgReturn);
+                            bmp.Save(savePath, ImageFormat.Jpeg);
+                        }
+                    }
+                }
+                catch 
+                {
+                    return BadRequest(new
+                    {
+                        invalid = "Помилка обробки фото"
+                    });
                 }
                 var faker = new Faker();
                 Product product = new Product
@@ -163,6 +191,13 @@ namespace Covid19Back.Controllers
                     invalid = "Не вірний тип данних"
                 });
             }
+
+        }
+
+        private bool IsBase64String(string s)
+        {
+            s = s.Trim();
+            return (s.Length % 4 == 0) && Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
 
         }
     }

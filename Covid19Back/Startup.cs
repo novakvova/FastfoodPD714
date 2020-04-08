@@ -35,8 +35,9 @@ namespace Covid19Back
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            string database = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-             options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+             options.UseSqlite(database));
 
             services.AddTransient<IJWTTokenService, JWTTokenService>();
 
@@ -44,7 +45,8 @@ namespace Covid19Back
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetValue<string>("SecretPhrase")));
+            string keyJWT = Configuration.GetValue<string>("SecretPhrase");
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyJWT));
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -72,6 +74,7 @@ namespace Covid19Back
                     ClockSkew = TimeSpan.Zero
                 };
             });
+            services.AddDistributedMemoryCache();
 
             services.AddControllers();
         }
@@ -87,6 +90,7 @@ namespace Covid19Back
             }
 
             app.UseRouting();
+            app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();
 
