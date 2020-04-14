@@ -41,11 +41,20 @@ namespace Covid19Back.Entities
             if (userManager.FindByEmailAsync("admin@gmail.com").Result == null)
             {
                 string email = "admin@gmail.com";
+                UserProfile userProfile = new UserProfile
+                {
+                    Phone = "+38(097)234-11-34",
+                    Firstname = "Іван",
+                    Lastname = "Подкачкін",
+                    Image = "admin.jpg"
+                };
+
                 var user = new DbUser
                 {
                     Email = email,
                     UserName = email,
-                    PhoneNumber = "+11(111)111-11-11"
+                    PhoneNumber = "+11(111)111-11-11",
+                    UserProfile = userProfile
                 };
                 var result = userManager.CreateAsync(user, "Qwerty1-").Result;
                 result = userManager.AddToRoleAsync(user, roleName).Result;
